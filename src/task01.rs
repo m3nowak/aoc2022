@@ -1,10 +1,18 @@
 use std::fs::File;
 use std::io::{self, BufRead};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-pub fn solve(filepath: String) {
+use clap::{value_parser, Arg, ArgAction, Command};
+
+pub fn cli() -> Command {
+    Command::new("day01")
+        .about("Elvish calorie counter")
+        .arg(clap::arg!(path: <PATH>).required(true).value_parser(value_parser!(std::path::PathBuf)))
+}
+
+pub fn solve(filepath: PathBuf) {
     if let Ok(lines) = read_lines(filepath) {
-        let mut max_kcal: [u32; 3] = [0,0,0];
+        let mut max_kcal: [u32; 3] = [0, 0, 0];
         let mut acc_kcal: u32 = 0;
         let mut total: u32 = 0;
         for line in lines {
@@ -35,7 +43,6 @@ pub fn solve(filepath: String) {
             max_sum += max_kcal[index];
         }
         println!("Max sum {}", max_sum);
-        
     }
 }
 
