@@ -38,6 +38,9 @@ Cargo.lock
 
 # End of https://www.toptal.com/developers/gitignore/api/rust,visualstudiocode
 
+# tasks data
+data/
+
 # Added by cargo
 
 /target

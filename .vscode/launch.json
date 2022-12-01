@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
+            "args": ["data/01.txt"],
             "cwd": "${workspaceFolder}"
         },
         {
