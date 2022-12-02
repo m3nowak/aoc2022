@@ -1,8 +1,8 @@
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-use clap::{value_parser, Arg, ArgAction, Command};
+use clap::{value_parser,Command, ArgMatches};
+
+use crate::common;
 
 pub fn cli() -> Command {
     Command::new("day01")
@@ -10,8 +10,14 @@ pub fn cli() -> Command {
         .arg(clap::arg!(path: <PATH>).required(true).value_parser(value_parser!(std::path::PathBuf)))
 }
 
+pub fn handle(matches: &ArgMatches) {
+    let path = matches.get_one::<std::path::PathBuf>("path");
+    solve(path.unwrap().to_path_buf());
+}
+
 pub fn solve(filepath: PathBuf) {
-    if let Ok(lines) = read_lines(filepath) {
+    
+    if let Ok(lines) = common::read_lines(filepath) {
         let mut max_kcal: [u32; 3] = [0, 0, 0];
         let mut acc_kcal: u32 = 0;
         let mut total: u32 = 0;
@@ -44,12 +50,4 @@ pub fn solve(filepath: PathBuf) {
         }
         println!("Max sum {}", max_sum);
     }
-}
-
-fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where
-    P: AsRef<Path>,
-{
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
 }
