@@ -29,7 +29,7 @@ fn solve(filepath: PathBuf) {
                 op_hand = line_str.nth(0).unwrap();
                 my_hand = normalize(line_str.nth(1).unwrap());
                 score_acc += score(op_hand, my_hand);
-                let mut line_str = line_text.chars();
+                line_str = line_text.chars();
                 op_hand = line_str.nth(0).unwrap();
                 my_hand = normalize2(line_str.nth(1).unwrap(), op_hand);
                 score2_acc += score(op_hand, my_hand);
