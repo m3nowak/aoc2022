@@ -61,7 +61,7 @@ fn find_common_char(input1:&String, input2:&String) -> Option<char>{
     return None;
 }
 
-fn find_common_char3(input1:&String, input2:&String, input3:&String) -> Option<char>{
+fn find_common_char3(input1:&str, input2:&str, input3:&str) -> Option<char>{
     for i1c in input1.chars(){
         if input2.contains(i1c) &&  input3.contains(i1c){
             return Some(i1c);
@@ -70,7 +70,7 @@ fn find_common_char3(input1:&String, input2:&String, input3:&String) -> Option<c
     return None;
 }
 
-fn split_str(input: &String) -> (String, String){
+fn split_str(input: &str) -> (String, String){
     let half_length = input.len()/2;
     return (String::from(&input[..half_length]) , String::from(&input[half_length..])) ;
 }
