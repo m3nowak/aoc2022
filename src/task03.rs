@@ -72,7 +72,7 @@ fn find_common_char3(input1:&String, input2:&String, input3:&String) -> Option<c
 
 fn split_str(input: &String) -> (String, String){
     let half_length = input.len()/2;
-    return (String::from(&input[0..half_length]) , String::from(&input[half_length..2*half_length])) ;
+    return (String::from(&input[..half_length]) , String::from(&input[half_length..])) ;
 }
 
 fn score(item: char) -> u32 {
