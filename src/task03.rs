@@ -23,21 +23,21 @@ fn solve(filepath: PathBuf) {
 
     let mut index: u8 = 0;
 
-    let mut bak_line1: String = "".to_string();
-    let mut bak_line2: String = "".to_string();
+    let mut bak_line1: String = String::new();
+    let mut bak_line2: String = String::new();
 
     if let Ok(lines) = common::read_lines(filepath) {
         for line in lines {
             if let Ok(line_text) = line {
 
-                let (sub1, sub2) = split_str(line_text.clone());
-                match find_common_char(sub1, sub2){
+                let (sub1, sub2) = split_str(&line_text);
+                match find_common_char(&sub1, &sub2){
                     Some(cc) => {acc_split += score(cc)},
                     None => {}
                 }
                 index = (index + 1) % 3;
                 if index == 0 {
-                    acc_badge += score(find_common_char3(bak_line1.clone(), bak_line2.clone(), line_text).unwrap())
+                    acc_badge += score(find_common_char3(&bak_line1, &bak_line2, &line_text).unwrap())
                 }
                 else if index == 1 {
                     bak_line1 = line_text;
@@ -52,7 +52,7 @@ fn solve(filepath: PathBuf) {
     println!("Final score {}/{}", acc_split, acc_badge)
 }
 
-fn find_common_char(input1:String, input2:String) -> Option<char>{
+fn find_common_char(input1:&String, input2:&String) -> Option<char>{
     for i1c in input1.chars(){
         if input2.contains(i1c) {
             return Some(i1c);
@@ -61,7 +61,7 @@ fn find_common_char(input1:String, input2:String) -> Option<char>{
     return None;
 }
 
-fn find_common_char3(input1:String, input2:String, input3:String) -> Option<char>{
+fn find_common_char3(input1:&String, input2:&String, input3:&String) -> Option<char>{
     for i1c in input1.chars(){
         if input2.contains(i1c) &&  input3.contains(i1c){
             return Some(i1c);
@@ -70,7 +70,7 @@ fn find_common_char3(input1:String, input2:String, input3:String) -> Option<char
     return None;
 }
 
-fn split_str(input: String) -> (String, String){
+fn split_str(input: &String) -> (String, String){
     let half_length = input.len()/2;
     return (String::from(&input[0..half_length]) , String::from(&input[half_length..2*half_length])) ;
 }
