@@ -81,7 +81,37 @@ fn solve(filepath: PathBuf) {
         }
     }
     println!("Tree created!");
-    print_tree(&tree_root);
+    let mut travel_vec: Vec<u64> = Vec::new();
+    let total_size = measure_element(&tree_root, &mut travel_vec);
+    let space_free = 70000000 - total_size;
+    let space_remaining = 30000000 - space_free;
+    println!("Total size: {}\nFree: {}\nTo reclaim {}", total_size, space_free, space_remaining);
+    let mut acc = 0;
+    let mut best_del_candidate = total_size;
+    for value in travel_vec {
+        if value <= 100000{
+            acc += value;
+        }
+        if value < best_del_candidate && value >= space_remaining{
+            best_del_candidate = value;
+        }
+    }
+    println!("Size of selected dirs: {}\nBest deletion candidate {}", acc, best_del_candidate);
+    //print_tree(&tree_root);
+}
+
+fn measure_element(tree_root: &FileTree, travel_vec: &mut Vec<u64>) -> u64 {
+    match tree_root {
+        FileTree::Dir(tree) => {
+            let mut acc = 0;
+            for (_, subelement) in tree {
+                acc += measure_element(subelement, travel_vec);
+            }
+            travel_vec.push(acc);
+            acc
+        }
+        FileTree::File(size) => *size,
+    }
 }
 
 fn print_tree(tree_root: &FileTree) {
@@ -89,12 +119,10 @@ fn print_tree(tree_root: &FileTree) {
 }
 
 fn print_tree_inner(tree_root: &FileTree, indent: usize) {
-    //print!("{} lines here ->", indent);
-
     match tree_root {
         FileTree::Dir(tree) => {
             for (name, element) in tree {
-                print!("{}","  ".repeat(indent));
+                print!("{}", "  ".repeat(indent));
                 match element {
                     &FileTree::File(size) => {
                         println!("{} {}", name, size)
