@@ -1,8 +1,7 @@
 use std::collections::HashMap;
-use std::ops::Deref;
 use std::path::PathBuf;
 
-use clap::{value_parser, Arg, ArgAction, ArgMatches, Command};
+use clap::{value_parser, ArgMatches, Command};
 
 use crate::common;
 
@@ -114,11 +113,11 @@ fn measure_element(tree_root: &FileTree, travel_vec: &mut Vec<u64>) -> u64 {
     }
 }
 
-fn print_tree(tree_root: &FileTree) {
-    print_tree_inner(tree_root, 0);
+fn _print_tree(tree_root: &FileTree) {
+    _print_tree_inner(tree_root, 0);
 }
 
-fn print_tree_inner(tree_root: &FileTree, indent: usize) {
+fn _print_tree_inner(tree_root: &FileTree, indent: usize) {
     match tree_root {
         FileTree::Dir(tree) => {
             for (name, element) in tree {
@@ -129,7 +128,7 @@ fn print_tree_inner(tree_root: &FileTree, indent: usize) {
                     }
                     subtree => {
                         println!("<{}>", name);
-                        print_tree_inner(subtree, indent + 1);
+                        _print_tree_inner(subtree, indent + 1);
                     }
                 }
             }
