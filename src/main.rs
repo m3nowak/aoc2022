@@ -17,7 +17,8 @@ fn main() {
         .subcommand(task04::cli())
         .subcommand(task05::cli())
         .subcommand(task06::cli())
-        .subcommand(task07::cli());
+        .subcommand(task07::cli())
+        .subcommand(task08::cli());
     
     let matches = cmd.get_matches();
     match matches.subcommand() {
@@ -28,6 +29,7 @@ fn main() {
         Some(("day05", sub_matches)) => task05::handle(sub_matches),
         Some(("day06", sub_matches)) => task06::handle(sub_matches),
         Some(("day07", sub_matches)) => task07::handle(sub_matches),
+        Some(("day08", sub_matches)) => task08::handle(sub_matches),
         _ => unreachable!("clap should ensure we don't get here"),
     };
 }
