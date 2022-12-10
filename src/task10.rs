@@ -110,8 +110,6 @@ pub fn solve(filepath: PathBuf) {
         let mut simulator = ProcessorSim::new(operations);
         let cycles_of_intrest:Vec<u32> = vec![20,60,100,140,180,220];
         let mut acc: i128 = 0;
-        let a = 44 % 40;
-        println!("{}", a);
         let mut str_acc = String::new();
         while !simulator.is_exhausted() {
             simulator.pass_cycle();
