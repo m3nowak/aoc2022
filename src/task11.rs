@@ -40,7 +40,7 @@ impl Ape {
             inspection_count: 0,
         }
     }
-    pub fn run_ape_logic(&mut self, worry_div: bool) -> Vec<(u128, usize)> {
+    pub fn run_ape_logic(&mut self, universal_divisor: Option<u128>) -> Vec<(u128, usize)> {
         let mut thrown_items: Vec<(u128, usize)> = Vec::new();
         for og_item in &self.items {
             let mut item = *og_item;
@@ -54,17 +54,19 @@ impl Ape {
                     item += val;
                 }
                 ApeOperation::Square => {
-                    println!("Squared value: {}", item);
                     item *= item;
                 }
             }
-            //monke gets bored
-            //item = (item as f64 / 3.0).round() as i64;
-            if worry_div{
-                //let devided_raw = item / dec!(3);
-                //item = devided_raw - (devided_raw % dec!(1));
-                item /= 3;
+            
+            match universal_divisor{
+                None => {//monke gets bored
+                    item /= 3;
+                },
+                Some(val) => {//monke isn't bored, but we need to keep item val managable
+                    item = item % val;
+                }
             }
+
             //monke decides where to throw
             if (item % self.div_test) == 0 {
                 thrown_items.push((item, self.tgt_succ))
@@ -116,7 +118,7 @@ pub fn solve(filepath: PathBuf) {
     let ape_map_clone = ape_map.clone();
     for _ in 0..20 {
         for ape_index in &ape_indicies {
-            let thrown_items = ape_map.get_mut(ape_index).unwrap().run_ape_logic(true);
+            let thrown_items = ape_map.get_mut(ape_index).unwrap().run_ape_logic(None);
             for (item_value, item_target) in &thrown_items {
                 ape_map.get_mut(item_target).unwrap().add_item(*item_value)
             }
@@ -136,9 +138,17 @@ pub fn solve(filepath: PathBuf) {
         ape_levels[0] * ape_levels[1]
     );
     ape_map = ape_map_clone;
+
+    let mut universal_divisor = 1; //shamelessly stolen from https://github.com/LinAGKar/advent-of-code-2022-rust/blob/main/day11b/src/main.rs
+    for (_, ape) in &ape_map{
+        if universal_divisor % ape.div_test != 0 {
+            universal_divisor *= ape.div_test;
+        }
+    }
+
     for _ in 0..10000 {
         for ape_index in &ape_indicies {
-            let thrown_items = ape_map.get_mut(ape_index).unwrap().run_ape_logic(false);
+            let thrown_items = ape_map.get_mut(ape_index).unwrap().run_ape_logic(Some(universal_divisor));
             for (item_value, item_target) in &thrown_items {
                 ape_map.get_mut(item_target).unwrap().add_item(*item_value)
             }
@@ -270,7 +280,7 @@ mod tests {
             Ape::new(vec![74], ApeOperation::Add(3), 17, 0, 1),
         ];
         for ape_index in 0..ape_vec.len(){
-            let mus = ape_vec[ape_index].run_ape_logic(true);
+            let mus = ape_vec[ape_index].run_ape_logic(None);
             for (item, item_tgt) in mus{
                 ape_vec[item_tgt].add_item(item);
             }
