@@ -57,12 +57,14 @@ impl Ape {
                     item *= item;
                 }
             }
-            
-            match universal_divisor{
-                None => {//monke gets bored
+
+            match universal_divisor {
+                None => {
+                    //monke gets bored
                     item /= 3;
-                },
-                Some(val) => {//monke isn't bored, but we need to keep item val managable
+                }
+                Some(val) => {
+                    //monke isn't bored, but we need to keep item val managable
                     item = item % val;
                 }
             }
@@ -140,7 +142,7 @@ pub fn solve(filepath: PathBuf) {
     ape_map = ape_map_clone;
 
     let mut universal_divisor = 1; //shamelessly stolen from https://github.com/LinAGKar/advent-of-code-2022-rust/blob/main/day11b/src/main.rs
-    for (_, ape) in &ape_map{
+    for (_, ape) in &ape_map {
         if universal_divisor % ape.div_test != 0 {
             universal_divisor *= ape.div_test;
         }
@@ -148,7 +150,10 @@ pub fn solve(filepath: PathBuf) {
 
     for _ in 0..10000 {
         for ape_index in &ape_indicies {
-            let thrown_items = ape_map.get_mut(ape_index).unwrap().run_ape_logic(Some(universal_divisor));
+            let thrown_items = ape_map
+                .get_mut(ape_index)
+                .unwrap()
+                .run_ape_logic(Some(universal_divisor));
             for (item_value, item_target) in &thrown_items {
                 ape_map.get_mut(item_target).unwrap().add_item(*item_value)
             }
@@ -279,9 +284,9 @@ mod tests {
             Ape::new(vec![79, 60, 97], ApeOperation::Square, 13, 1, 3),
             Ape::new(vec![74], ApeOperation::Add(3), 17, 0, 1),
         ];
-        for ape_index in 0..ape_vec.len(){
+        for ape_index in 0..ape_vec.len() {
             let mus = ape_vec[ape_index].run_ape_logic(None);
-            for (item, item_tgt) in mus{
+            for (item, item_tgt) in mus {
                 ape_vec[item_tgt].add_item(item);
             }
         }
