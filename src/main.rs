@@ -11,6 +11,7 @@ mod task09;
 mod task10;
 mod task11;
 mod task12;
+mod task13;
 
 fn main() {
     let cmd = clap::Command::new("aoc")
@@ -26,7 +27,8 @@ fn main() {
         .subcommand(task09::cli())
         .subcommand(task10::cli())
         .subcommand(task11::cli())
-        .subcommand(task12::cli());
+        .subcommand(task12::cli())
+        .subcommand(task13::cli());
     
     let matches = cmd.get_matches();
     match matches.subcommand() {
@@ -42,6 +44,7 @@ fn main() {
         Some(("day10", sub_matches)) => task10::handle(sub_matches),
         Some(("day11", sub_matches)) => task11::handle(sub_matches),
         Some(("day12", sub_matches)) => task12::handle(sub_matches),
+        Some(("day13", sub_matches)) => task13::handle(sub_matches),
         _ => unreachable!("clap should ensure we don't get here"),
     };
 }
