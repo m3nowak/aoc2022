@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, path::PathBuf, cmp};
+use std::{collections::HashSet, path::PathBuf, cmp};
 
 use clap::{value_parser, ArgMatches, Command};
 
@@ -90,7 +90,6 @@ fn parse_line(line: &str) -> HashSet<(usize, usize)> {
     let mut rocks: HashSet<(usize,usize)> = HashSet::new();
     let mut coors = line.split(" -> ").map(tpl_parse);
     let mut cursor = coors.next().unwrap();
-    //rocks.insert(cursor);
     for target in coors{
         if cursor.0 == target.0 {
             for i in cmp::min(cursor.1, target.1)..=cmp::max(cursor.1, target.1){
@@ -104,7 +103,6 @@ fn parse_line(line: &str) -> HashSet<(usize, usize)> {
         }
         else {panic!()}
         cursor = target;
-        //rocks.insert(cursor);
     }
     rocks
 }
