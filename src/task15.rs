@@ -281,7 +281,7 @@ mod tests {
 
     use super::{
         add_no_overlap, count_bad_spots, count_segments, count_segments_limited, find_coors,
-        grid_scan, scan_x_line_to_segment, scan_y_line_to_segment,
+        scan_x_line_to_segment, scan_y_line_to_segment,
     };
     use super::{cut_segment_without_overlap, parse_line, parse_lines, Sensor};
 
