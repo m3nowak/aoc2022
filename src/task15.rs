@@ -1,4 +1,4 @@
-use std::{collections::HashSet, path::PathBuf, cmp};
+use std::{cmp, collections::HashSet, path::PathBuf};
 
 use clap::{value_parser, ArgMatches, Command};
 
@@ -7,6 +7,7 @@ use regex::Regex;
 use crate::common;
 
 const LINE_Y: isize = 2000000;
+const GRID_SIZE: isize = 4000000;
 
 #[derive(PartialEq, Eq, Debug, Clone, Hash)]
 struct Sensor {
@@ -42,14 +43,25 @@ pub fn solve(filepath: PathBuf) {
     if let Ok(lines) = common::read_lines(&filepath) {
         let mut segment_vec: Vec<(isize, isize)> = Vec::new();
         let (sensor_set, beacon_set) = parse_lines(lines.map(|l| l.unwrap()));
-        for sensor in sensor_set {
+        for sensor in &sensor_set {
             if let Some(segment) = scan_y_line_to_segment(&sensor, LINE_Y) {
                 add_no_overlap(&mut segment_vec, segment);
             }
         }
-        let bad_beacon_spots: Vec<isize> = beacon_set.iter().filter(|(_,y)| *y == LINE_Y).map(|(x,_)| *x).collect();
+        let bad_beacon_spots: Vec<isize> = beacon_set
+            .iter()
+            .filter(|(_, y)| *y == LINE_Y)
+            .map(|(x, _)| *x)
+            .collect();
         let count = count_segments(&segment_vec) - count_bad_spots(&segment_vec, &bad_beacon_spots);
         println!("Found {} locations.", count);
+        let (x_pos, y_pos) = find_coors(&sensor_set, 0, GRID_SIZE);
+        println!(
+            "x={}, y={}, f={}",
+            x_pos.unwrap(),
+            y_pos.unwrap(),
+            x_pos.unwrap() * GRID_SIZE + y_pos.unwrap()
+        );
     }
 }
 
@@ -62,36 +74,38 @@ fn add_no_overlap(segments: &mut Vec<(isize, isize)>, new_segment: (isize, isize
     segments.extend(to_add.into_iter());
 }
 
-fn count_segments(segments: &Vec<(isize, isize)>) -> usize{
+fn count_segments(segments: &Vec<(isize, isize)>) -> usize {
     let mut ret = 0;
-    for segment in segments{
+    for segment in segments {
         ret += segment.1 - segment.0 + 1;
     }
     ret as usize
 }
 
-fn count_segments_limited(segments: &Vec<(isize, isize)>, limit_lo: isize, limit_hi: isize) -> usize{
+fn count_segments_limited(
+    segments: &Vec<(isize, isize)>,
+    limit_lo: isize,
+    limit_hi: isize,
+) -> usize {
     let mut ret = 0;
-    for segment in segments{
-        if segment.1 >= limit_lo && segment.0 <= limit_hi{
-
+    for segment in segments {
+        if segment.0 <= limit_hi && segment.1 >= limit_lo {
+            ret += cmp::min(segment.1, limit_hi) - cmp::max(segment.0, limit_lo) + 1;
         }
-        ret += cmp::min(segment.1, limit_hi) - cmp::max(segment.0, limit_lo) + 1;
     }
     ret as usize
 }
 
-fn count_bad_spots(segments: &Vec<(isize, isize)>, bad_spots: &Vec<isize>) -> usize{
+fn count_bad_spots(segments: &Vec<(isize, isize)>, bad_spots: &Vec<isize>) -> usize {
     let mut ret = 0;
-    for segment in segments{
-        for bad_spot in bad_spots{
-            if segment.0 <= *bad_spot && *bad_spot <= segment.1{
+    for segment in segments {
+        for bad_spot in bad_spots {
+            if segment.0 <= *bad_spot && *bad_spot <= segment.1 {
                 ret += 1;
             }
         }
     }
     ret
-    
 }
 
 fn cut_segment_without_overlap(
@@ -111,6 +125,18 @@ fn cut_segment_without_overlap(
     if tested_segment.0 <= new_segment.0 && new_segment.1 <= tested_segment.1 {
         //tested segment contains new
         return vec![];
+    } else if new_segment.0 < tested_segment.0 && new_segment.1 == tested_segment.1 {
+        return cut_segment_without_overlap(
+            (new_segment.0, tested_segment.0 - 1),
+            existing,
+            starting_index + 1,
+        );
+    } else if new_segment.0 == tested_segment.0 && tested_segment.1 < new_segment.1 {
+        return cut_segment_without_overlap(
+            (tested_segment.1 + 1, new_segment.1),
+            existing,
+            starting_index + 1,
+        );
     } else if new_segment.0 < tested_segment.0 && tested_segment.1 < new_segment.1 {
         //new segment contains tested
         let mut retvec = Vec::new();
@@ -148,8 +174,9 @@ fn cut_segment_without_overlap(
             existing,
             starting_index + 1,
         );
-    }
-    else{ panic!()};
+    } else {
+        panic!()
+    };
 }
 
 fn scan_y_line_to_segment(sensor: &Sensor, y: isize) -> Option<(isize, isize)> {
@@ -204,7 +231,10 @@ fn parse_line(line: &str) -> ((isize, isize), (isize, isize)) {
     )
 }
 
-fn grid_scan(sensor_set: &HashSet<Sensor>, x_y: isize) -> (Vec<(isize, isize)>, Vec<(isize, isize)>){
+fn grid_scan(
+    sensor_set: &HashSet<Sensor>,
+    x_y: isize,
+) -> (Vec<(isize, isize)>, Vec<(isize, isize)>) {
     let mut segment_vec_y = Vec::new();
     let mut segment_vec_x = Vec::new();
     for sensor in sensor_set {
@@ -218,11 +248,41 @@ fn grid_scan(sensor_set: &HashSet<Sensor>, x_y: isize) -> (Vec<(isize, isize)>, 
     (segment_vec_x, segment_vec_y)
 }
 
+fn find_coors(
+    sensor_set: &HashSet<Sensor>,
+    limit_lo: isize,
+    limit_hi: isize,
+) -> (Option<isize>, Option<isize>) {
+    let mut x_pos: Option<isize> = None;
+    let mut y_pos: Option<isize> = None;
+
+    let searched_val = (limit_hi - limit_lo) as usize;
+
+    for i in limit_lo..=limit_hi as isize {
+        let (v_x, v_y) = grid_scan(&sensor_set, i);
+        let x_can = count_segments_limited(&v_x, limit_lo, limit_hi);
+        let y_can = count_segments_limited(&v_y, limit_lo, limit_hi);
+        if x_can == searched_val {
+            x_pos = Some(i);
+        }
+        if y_can == searched_val {
+            y_pos = Some(i);
+        }
+        if x_can < searched_val || y_can < searched_val {
+            panic!();
+        }
+        println!("{}/{}", i, limit_hi);
+    }
+    (x_pos, y_pos)
+}
+
 #[cfg(test)]
 mod tests {
 
-    use crate::task15::{scan_y_line_to_segment, scan_x_line_to_segment, add_no_overlap, count_segments, count_bad_spots, grid_scan, count_segments_limited};
-
+    use super::{
+        add_no_overlap, count_bad_spots, count_segments, count_segments_limited, find_coors,
+        grid_scan, scan_x_line_to_segment, scan_y_line_to_segment,
+    };
     use super::{cut_segment_without_overlap, parse_line, parse_lines, Sensor};
 
     #[test]
@@ -264,11 +324,22 @@ mod tests {
             pos_y: 0,
             radius: 10,
         };
-        assert_eq!(scan_y_line_to_segment(&s, 0).unwrap(), (-10,10));
-        assert_eq!(scan_y_line_to_segment(&s, 10).unwrap(), (0,0));
-        assert_eq!(scan_y_line_to_segment(&s, -10).unwrap(), (0,0));
+        assert_eq!(scan_y_line_to_segment(&s, 0).unwrap(), (-10, 10));
+        assert_eq!(scan_y_line_to_segment(&s, 10).unwrap(), (0, 0));
+        assert_eq!(scan_y_line_to_segment(&s, -10).unwrap(), (0, 0));
         assert!(scan_y_line_to_segment(&s, 11).is_none());
         assert!(scan_y_line_to_segment(&s, -11).is_none());
+        assert_eq!(scan_x_line_to_segment(&s, 0).unwrap(), (-10, 10));
+        assert_eq!(scan_x_line_to_segment(&s, 10).unwrap(), (0, 0));
+        assert_eq!(scan_x_line_to_segment(&s, -10).unwrap(), (0, 0));
+        assert!(scan_x_line_to_segment(&s, 11).is_none());
+        assert!(scan_x_line_to_segment(&s, -11).is_none());
+    }
+
+    #[test]
+    fn test_count_segments_limited() {
+        let a = vec![(-1, 15), (16, 20), (21, 21), (-5, -2)];
+        assert_eq!(count_segments_limited(&a, 0, 20), 21)
     }
 
     #[test]
@@ -282,8 +353,19 @@ mod tests {
             cut_segment_without_overlap((-10, 8), &segments, 0),
             vec![(-10, -1), (6, 8)]
         );
+        assert_eq!(
+            cut_segment_without_overlap((-5, 5), &segments, 0),
+            vec![(-5, -1)]
+        );
+        assert_eq!(
+            cut_segment_without_overlap((0, 7), &segments, 0),
+            vec![(6, 7)]
+        );
         assert_eq!(cut_segment_without_overlap((12, 15), &segments, 0), vec![]);
-        assert_eq!(cut_segment_without_overlap((-100, 100), &segments, 0), vec![(-100,-1), (6,9), (21,29), (51,100)]);
+        assert_eq!(
+            cut_segment_without_overlap((-100, 100), &segments, 0),
+            vec![(-100, -1), (6, 9), (21, 29), (51, 100)]
+        );
     }
 
     #[test]
@@ -311,28 +393,16 @@ mod tests {
                 add_no_overlap(&mut segment_vec, segment);
             }
         }
-        let bad_beacon_spots: Vec<isize> = beacon_set.iter().filter(|(_,y)| *y == 10).map(|(x,_)| *x).collect();
+        let bad_beacon_spots: Vec<isize> = beacon_set
+            .iter()
+            .filter(|(_, y)| *y == 10)
+            .map(|(x, _)| *x)
+            .collect();
         assert_eq!(count_segments(&segment_vec), 27);
         assert_eq!(count_bad_spots(&segment_vec, &bad_beacon_spots), 1);
 
-        let mut x_pos:Option<isize> = None;
-        let mut y_pos:Option<isize> = None;
-
-        for i in 0..=20 as isize{
-            let (v_x, v_y) = grid_scan(&sensor_set, i);
-            let x_can = count_segments_limited(&v_x, 0, 20);
-            let y_can = count_segments_limited(&v_y, 0, 20);
-            if x_can == 20{
-                x_pos = Some(i);
-                println!("found x: {}", i)
-            }
-            if y_can == 20{
-                y_pos = Some(i);
-                println!("found y: {}", i)
-            }
-        }
+        let (x_pos, y_pos) = find_coors(&sensor_set, 0, 20);
         assert_eq!(x_pos.unwrap(), 14);
         assert_eq!(y_pos.unwrap(), 11);
-
     }
 }
