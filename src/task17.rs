@@ -163,9 +163,7 @@ fn simulate_rocks(
                 rock_pos.0,
                 highest_point as isize - rock_pos.1 as isize,
                 highest_point - old_highest_point
-            ))
-        }
-        if accelerate {
+            ));
             if let Some(cycle_size) = check_for_cycles_e(&journal, cycle_interop) {
                 let cycle_growth = (1..=cycle_size).into_iter().fold(0, |acc, x| {
                     acc + highest_growth_history[highest_growth_history.len() - x]
