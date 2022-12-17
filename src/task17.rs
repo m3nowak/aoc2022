@@ -57,9 +57,9 @@ enum RockShape {
     LiveV,
     Square,
 }
-// 4|  .x.  | Shape pos (*) = (2,2)
-// 3|  xxx  |
-// 2|  *x.  |
+// 4|   .x. | Shape pos (*) = (3,2)
+// 3|   xxx |
+// 2|   *x. |
 // 1|       |
 // 0+-------+
 //   0123456
@@ -137,8 +137,6 @@ fn simulate_rocks(
     let mut taken_spaces: HashSet<(usize, usize)> = HashSet::new();
     let mut journal: Vec<(RockShape, usize, isize, usize)> = Vec::new(); // shape, xpos, ypos in relation to highest point so far, height growth
     let cycle_interop = &rock_order.len() * dir_feed.cycle_len();
-    //let mut cycle_track = Vec::new();
-    //let mut previous_cycle_track_capture: usize = 0;
     for iteration in 0..iter_count {
         let rock_shape = &rock_order[iteration % rock_order.len()];
         let mut rock_pos = (2_usize, highest_point + 4);
@@ -154,7 +152,6 @@ fn simulate_rocks(
         let mut levels_changed = HashSet::new();
         let old_highest_point = highest_point;
         for new_pos in new_pos_set {
-            //let highest_point_new = cmp::max(highest_point, new_pos.1);
             highest_point = cmp::max(highest_point, new_pos.1);
             levels_changed.insert(new_pos.1);
             taken_spaces.insert(new_pos);
@@ -170,26 +167,14 @@ fn simulate_rocks(
         }
         if accelerate {
             if let Some(cycle_size) = check_for_cycles_e(&journal, cycle_interop) {
-                println!(
-                    "Found cycle of size {} let's simulate this growth!",
-                    cycle_size
-                );
                 let cycle_growth = (1..=cycle_size).into_iter().fold(0, |acc, x| {
                     acc + highest_growth_history[highest_growth_history.len() - x]
                 });
-                println!(
-                    "Single cycle makes {} growth",
-                    cycle_growth
-                );
                 let mut simulated_size = highest_point;
                 let mut simulated_iteration = iteration;
                 let cycles_to_skip = (iter_count-iteration)/cycle_size;
                 simulated_iteration += cycles_to_skip * cycle_size;
                 simulated_size += cycles_to_skip * cycle_growth;
-                println!(
-                    "{} left!",
-                    iter_count-simulated_iteration
-                );
                 for i in 0..iter_count-simulated_iteration-1{
                     simulated_size += highest_growth_history[highest_growth_history.len() - cycle_size + i];
                     simulated_iteration += 1;
@@ -203,7 +188,6 @@ fn simulate_rocks(
 
 fn check_for_cycles_e<T: Eq>(vector: &Vec<T>, minimal_cycle_size: usize) -> Option<usize> {
     let max_possible_cycle_len = (vector.len() - 1) / 3;
-    //let min_possible_cycle_len = (vector.len() - 1) / 6;
     for tested_cycle_len in minimal_cycle_size..=max_possible_cycle_len {
         let mut is_cycle = true;
         for offset in 1..=tested_cycle_len {
@@ -329,11 +313,11 @@ mod tests {
         let (result_acc, _) = simulate_rocks(&mut dir_feed, 40, true);
         assert_eq!(result_og, result_acc);
 
-        // dir_feed.reset();
-        // let (result_og, _) = simulate_rocks(&mut dir_feed, 645, false);
-        // dir_feed.reset();
-        // let (result_acc, _) = simulate_rocks(&mut dir_feed, 645, true);
-        // assert_eq!(result_og, result_acc);
+        dir_feed.reset();
+        let (result_og, _) = simulate_rocks(&mut dir_feed, 645, false);
+        dir_feed.reset();
+        let (result_acc, _) = simulate_rocks(&mut dir_feed, 645, true);
+        assert_eq!(result_og, result_acc);
 
         dir_feed.reset();
         let (result_og, _) = simulate_rocks(&mut dir_feed, 4600, false);
