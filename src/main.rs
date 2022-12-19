@@ -40,7 +40,8 @@ async fn main() {
         .subcommand(task15::cli())
         .subcommand(task16::cli())
         .subcommand(task17::cli())
-        .subcommand(task18::cli());
+        .subcommand(task18::cli())
+        .subcommand(task19::cli());
     
     let matches = cmd.get_matches();
     match matches.subcommand() {
@@ -62,6 +63,7 @@ async fn main() {
         Some(("day16", sub_matches)) => task16::handle(sub_matches),
         Some(("day17", sub_matches)) => task17::handle(sub_matches),
         Some(("day18", sub_matches)) => task18::handle(sub_matches),
+        Some(("day19", sub_matches)) => task19::handle(sub_matches).await,
         _ => unreachable!("clap should ensure we don't get here"),
     };
 }
