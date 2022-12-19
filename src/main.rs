@@ -17,8 +17,10 @@ mod task15;
 mod task16;
 mod task17;
 mod task18;
+mod task19;
 
-fn main() {
+#[actix::main]
+async fn main() {
     let cmd = clap::Command::new("aoc")
         .subcommand_required(true)
         .subcommand(task01::cli())
