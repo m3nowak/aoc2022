@@ -19,6 +19,7 @@ mod task17;
 mod task18;
 mod task19;
 mod task20;
+mod task21;
 
 #[actix::main]
 async fn main() {
@@ -43,7 +44,8 @@ async fn main() {
         .subcommand(task17::cli())
         .subcommand(task18::cli())
         .subcommand(task19::cli())
-        .subcommand(task20::cli());
+        .subcommand(task20::cli())
+        .subcommand(task21::cli());
     
     let matches = cmd.get_matches();
     match matches.subcommand() {
@@ -67,6 +69,7 @@ async fn main() {
         Some(("day18", sub_matches)) => task18::handle(sub_matches),
         Some(("day19", sub_matches)) => task19::handle(sub_matches).await,
         Some(("day20", sub_matches)) => task20::handle(sub_matches),
+        Some(("day21", sub_matches)) => task21::handle(sub_matches),
         _ => unreachable!("clap should ensure we don't get here"),
     };
 }
