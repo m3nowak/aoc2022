@@ -82,11 +82,7 @@ struct Lattice {
 
 impl Lattice {
     fn find_north(&self, side:(isize,isize)) -> ((isize,isize), WrapRule){
-        if self.side_pos.contains(&(side.0, side.1-1)){
-            //go up, find north
-            return ((side.0, side.1-1), WrapRule::Rot0);
-        }
-        elif 
+        //find paths to all existing sides and store them as vec of heading
         todo!()
     }
 }
