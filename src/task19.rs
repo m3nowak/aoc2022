@@ -2,6 +2,7 @@ use std::{path::PathBuf, collections::HashSet, cmp};
 
 use clap::{value_parser, ArgMatches, Command};
 use regex::Regex;
+use rayon::prelude::*;
 
 use crate::common;
 
@@ -209,50 +210,25 @@ pub fn cli() -> Command {
     )
 }
 
-pub async fn handle(matches: &ArgMatches) {
+pub fn handle(matches: &ArgMatches) {
     let path = matches.get_one::<std::path::PathBuf>("path");
-    solve(path.unwrap().to_path_buf()).await
+    solve(path.unwrap().to_path_buf())
 }
 
-pub async fn solve(filepath: PathBuf) {
+pub fn solve(filepath: PathBuf) {
     if let Ok(lines) = common::read_lines(filepath) {
         let blueprints: Vec<Blueprint> = parse_lines(lines.map(|l| l.unwrap())).collect();
-        let mut msg_vec = Vec::new();
-        for blueprint in &blueprints{
-            let addr = SimulatorSUA.start();
-            msg_vec.push(addr.send(Task(blueprint.clone(), ROUND_COUNT, true)));
-        }
-        let mut acc = 0;
-        for msg in msg_vec{
-            match msg.await{
-                Ok(val) => {
-                    println!("Got response: {}", val);
-                    acc += val;
-                }
-                Err(_) => {
-                    println!("Couldn't get response!");
-                }
-            }
-        }
-        
-        let mut msg_vec = Vec::new();
-        let mut acc2: usize = 1;
-        for i in 0..3{
-            let addr = SimulatorSUA.start();
-            msg_vec.push(addr.send(Task(blueprints[i].clone(), ROUND_COUNT2, false)));
-        }
-        for msg in msg_vec{
-            match msg.await{
-                Ok(val) => {
-                    println!("Got response: {}", val);
-                    acc2 *= val;
-                }
-                Err(_) => {
-                    println!("Couldn't get response!");
-                }
-            }
-        }
+        // let (score,_,_) = best_outcome(OperationState::new(msg.0, msg.1), &HashSet::new(), msg.2, None);
+        let acc: usize = blueprints.par_iter()
+            .map(|blprt| best_outcome(OperationState::new(blprt.clone(), ROUND_COUNT), &HashSet::new(), true, None).0)
+            //.fold(|| 0, |acc, v| acc + v.0)
+            .sum();
         println!("Total sum: {} (pt1)", acc);
+
+        let acc2 = blueprints[0..3].par_iter()
+            .map(|blprt| best_outcome(OperationState::new(blprt.clone(), ROUND_COUNT2), &HashSet::new(), false, None).0)
+            //.fold(|| 0, |acc, v| acc + v.0)
+            .reduce(|| 1, |x,y| x*y);
         println!("Total procuct: {} (pt2)", acc2);
 
     } else {
@@ -266,26 +242,26 @@ fn parse_lines<'a>(
     lines.map(|l| Blueprint::from_line(&l))
 }
 
-use actix::prelude::*;
+// use actix::prelude::*;
 
-#[derive(Message)]
-#[rtype(result = "usize")]
-struct Task(Blueprint, usize, bool);
+// #[derive(Message)]
+// #[rtype(result = "usize")]
+// struct Task(Blueprint, usize, bool);
 
-struct SimulatorSUA;
+// struct SimulatorSUA;
 
-impl Actor for SimulatorSUA {
-    type Context = Context<Self>;
-}
+// impl Actor for SimulatorSUA {
+//     type Context = Context<Self>;
+// }
 
-impl Handler<Task> for SimulatorSUA {
-    type Result = usize;
+// impl Handler<Task> for SimulatorSUA {
+//     type Result = usize;
 
-    fn handle(&mut self, msg: Task, _ctx: &mut Context<Self>) -> Self::Result {
-        let (score,_,_) = best_outcome(OperationState::new(msg.0, msg.1), &HashSet::new(), msg.2, None);
-        score
-    }
-}
+//     fn handle(&mut self, msg: Task, _ctx: &mut Context<Self>) -> Self::Result {
+//         let (score,_,_) = best_outcome(OperationState::new(msg.0, msg.1), &HashSet::new(), msg.2, None);
+//         score
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

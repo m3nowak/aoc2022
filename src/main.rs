@@ -21,8 +21,7 @@ mod task19;
 mod task20;
 mod task21;
 
-#[actix::main]
-async fn main() {
+fn main() {
     let cmd = clap::Command::new("aoc")
         .subcommand_required(true)
         .subcommand(task01::cli())
@@ -67,7 +66,7 @@ async fn main() {
         Some(("day16", sub_matches)) => task16::handle(sub_matches),
         Some(("day17", sub_matches)) => task17::handle(sub_matches),
         Some(("day18", sub_matches)) => task18::handle(sub_matches),
-        Some(("day19", sub_matches)) => task19::handle(sub_matches).await,
+        Some(("day19", sub_matches)) => task19::handle(sub_matches),
         Some(("day20", sub_matches)) => task20::handle(sub_matches),
         Some(("day21", sub_matches)) => task21::handle(sub_matches),
         _ => unreachable!("clap should ensure we don't get here"),
