@@ -71,7 +71,7 @@ fn main() {
         Some(("day19", sub_matches)) => task19::handle(sub_matches),
         Some(("day20", sub_matches)) => task20::handle(sub_matches),
         Some(("day21", sub_matches)) => task21::handle(sub_matches),
-        Some(("day22", sub_matches)) => task21::handle(sub_matches),
+        Some(("day22", sub_matches)) => task22::handle(sub_matches),
         _ => unreachable!("clap should ensure we don't get here"),
     };
 }
