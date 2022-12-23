@@ -21,6 +21,7 @@ mod task19;
 mod task20;
 mod task21;
 mod task22;
+mod task22utils;
 
 fn main() {
     let cmd = clap::Command::new("aoc")
