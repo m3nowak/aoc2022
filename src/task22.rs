@@ -12,6 +12,14 @@ fn parse_input(lines: impl Iterator<Item = String>) -> (Map, Vec<Move>) {
     (Map::new(&lines_vec), moves)
 }
 
+fn parse_input_cubic(lines: impl Iterator<Item = String>) -> (MapCubic, Vec<Move>) {
+    let mut lines_vec: Vec<String> = lines.collect();
+    let moves = gen_moves(&lines_vec.pop().unwrap());
+
+    (MapCubic::new(&lines_vec), moves)
+}
+
+
 pub fn cli() -> Command {
     Command::new("day22").about("Jungle traversal").arg(
         clap::arg!(path: <PATH>)
@@ -26,13 +34,21 @@ pub fn handle(matches: &ArgMatches) {
 }
 
 pub fn solve(filepath: PathBuf) {
-    if let Ok(lines) = common::read_lines(filepath) {
+    if let Ok(lines) = common::read_lines(&filepath) {
         let (map, moves) = parse_input(lines.map(|l| l.unwrap()));
-        let mut position = Position::new(&map);
+        let mut position = map.start_pos();
         for mv in moves{
             position = new_position(&position, &mv, &map);
         }
         println!("final score (1): {}", position.score());
+    }
+    if let Ok(lines) = common::read_lines(&filepath) {
+        let (map, moves) = parse_input_cubic(lines.map(|l| l.unwrap()));
+        let mut position = map.start_pos();
+        for mv in moves{
+            position = new_position(&position, &mv, &map);
+        }
+        println!("final score (2): {}", position.score());
     }
 }
 
@@ -120,11 +136,56 @@ mod tests {
     fn test_pt1() {
         let lines = get_pt1_mock();
         let (map, moves) = parse_input(lines.into_iter());
-        let mut position = Position::new(&map);
+        let mut position = map.start_pos();
         for mv in moves{
             position = new_position(&position, &mv, &map);
         }
         assert_eq!(position.score(), 6032);
+    }
+
+    #[test]
+    fn test_warp_w(){
+        let lines = get_pt1_mock();
+        let (map, _) = parse_input_cubic(lines.into_iter());
+        let pos_src = Position{
+            heading: Heading::E,
+            x: 11,
+            y: 5
+        };
+        let pos_tgt = Position{
+            heading: Heading::S,
+            x: 14,
+            y: 8
+        };
+        assert_eq!(map.forward_pos(&pos_src), pos_tgt)
+    }
+
+    #[test]
+    fn test_warp_n(){
+        let lines = get_pt1_mock();
+        let (map, _) = parse_input_cubic(lines.into_iter());
+        let pos_src = Position{
+            heading: Heading::S,
+            x: 10,
+            y: 3
+        };
+        let pos_tgt = Position{
+            heading: Heading::S,
+            x: 10,
+            y: 4
+        };
+        assert_eq!(map.forward_pos(&pos_src), pos_tgt)
+    }
+
+    #[test]
+    fn test_pt2() {
+        let lines = get_pt1_mock();
+        let (map, moves) = parse_input_cubic(lines.into_iter());
+        let mut position = map.start_pos();
+        for mv in moves{
+            position = new_position(&position, &mv, &map);
+        }
+        assert_eq!(position.score(), 5031);
     }
 
 }
