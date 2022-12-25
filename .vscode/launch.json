@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["day22", "data/22.txt"],
+            "args": ["day23", "data/23.txt"],
             "cwd": "${workspaceFolder}"
         },
         {
