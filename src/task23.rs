@@ -25,15 +25,29 @@ pub fn handle(matches: &ArgMatches) {
 }
 
 pub fn solve(filepath: PathBuf) {
-    if let Ok(lines) = common::read_lines(filepath) {
+    if let Ok(lines) = common::read_lines(&filepath) {
         let (mut elf_pos, dim) = parse_input(lines.map(|l| l.unwrap()));
-        println!("Solution (0): {}", calc_score(&elf_pos));
         for _ in 0..10 {
             elf_pos = calc_round(&elf_pos, &dim);
         }
         print_map(&elf_pos, &dim);
         println!("Solution (1): {}", calc_score(&elf_pos));
-        
+    }
+
+    if let Ok(lines) = common::read_lines(&filepath) {
+        let (mut elf_pos, dim) = parse_input(lines.map(|l| l.unwrap()));
+        let mut count = 0;
+        loop {
+            let new_elf_pos = calc_round(&elf_pos, &dim);
+            count += 1;
+            if new_elf_pos == elf_pos {
+                break;
+            } else {
+                elf_pos = new_elf_pos;
+            }
+        }
+
+        println!("Solution (2): {}", count);
     }
 }
 
@@ -63,7 +77,7 @@ impl Heading {
             _ => unreachable!(),
         }
     }
-    pub fn shift_pos(&self, pos: &(usize, usize)) -> (usize, usize) {
+    pub fn shift_pos(&self, pos: &(isize, isize)) -> (isize, isize) {
         match self {
             Self::N => (pos.0, pos.1 - 1),
             Self::S => (pos.0, pos.1 + 1),
@@ -75,12 +89,12 @@ impl Heading {
 
 #[derive(Debug, Clone, Eq)]
 struct Elf {
-    pos: (usize, usize),
+    pos: (isize, isize),
     decision_count: usize,
 }
 
 impl Elf {
-    fn new(pos: &(usize, usize)) -> Self {
+    fn new(pos: &(isize, isize)) -> Self {
         Self {
             pos: pos.clone(),
             decision_count: 0,
@@ -108,9 +122,9 @@ impl PartialEq for Elf {
     }
 }
 
-fn all_neighbours(pos: &(usize, usize), dim: &(usize, usize)) -> Vec<(usize, usize)> {
+fn all_neighbours(pos: &(isize, isize), dim: &(isize, isize)) -> Vec<(isize, isize)> {
     let pos_i = (pos.0 as isize, pos.1 as isize);
-    let dim_i = (dim.0 as isize, dim.1 as isize);
+    //let dim_i = (dim.0 as isize, dim.1 as isize);
 
     let candidates = vec![
         (pos_i.0 + 1, pos_i.1),
@@ -125,71 +139,63 @@ fn all_neighbours(pos: &(usize, usize), dim: &(usize, usize)) -> Vec<(usize, usi
 
     candidates
         .into_iter()
-        .filter(|c| c.0 >= 0 && c.0 < dim_i.0 && c.1 >= 0 && c.1 < dim_i.1)
-        .map(|t| (t.0 as usize, t.1 as usize))
+        //.filter(|c| c.0 >= 0 && c.0 < dim_i.0 && c.1 >= 0 && c.1 < dim_i.1)
+        .map(|t| (t.0, t.1))
         .collect()
 }
 
 fn heading_neighbours(
-    pos: &(usize, usize),
+    pos: &(isize, isize),
     heading: &Heading,
-    dim: &(usize, usize),
-) -> Option<Vec<(usize, usize)>> {
-    if (pos.1 == 0 && heading == &Heading::N)
-        || (pos.0 == 0 && heading == &Heading::W)
-        || (pos.1 == dim.1 - 1 && heading == &Heading::S)
-        || (pos.0 == dim.0 - 1 && heading == &Heading::E)
-    {
-        return None;
-    } else {
-        let mut ret = vec![];
-        match heading {
-            Heading::E => {
-                ret.push((pos.0 + 1, pos.1));
-                if pos.1 > 0 {
-                    ret.push((pos.0 + 1, pos.1 - 1));
-                }
-                if pos.1 < dim.1 - 1 {
-                    ret.push((pos.0 + 1, pos.1 + 1));
-                }
-            }
-            Heading::S => {
-                ret.push((pos.0, pos.1 + 1));
-                if pos.0 > 0 {
-                    ret.push((pos.0 - 1, pos.1 + 1));
-                }
-                if pos.0 < dim.0 - 1 {
-                    ret.push((pos.0 + 1, pos.1 + 1));
-                }
-            }
-            Heading::W => {
-                ret.push((pos.0 - 1, pos.1));
-                if pos.1 > 0 {
-                    ret.push((pos.0 - 1, pos.1 - 1));
-                }
-                if pos.1 < dim.1 - 1 {
-                    ret.push((pos.0 - 1, pos.1 + 1));
-                }
-            }
-            Heading::N => {
-                ret.push((pos.0, pos.1 - 1));
-                if pos.0 > 0 {
-                    ret.push((pos.0 - 1, pos.1 - 1));
-                }
-                if pos.0 < dim.0 - 1 {
-                    ret.push((pos.0 + 1, pos.1 - 1));
-                }
-            }
-        };
-        return Some(ret);
-    }
+    dim: &(isize, isize),
+) -> Option<Vec<(isize, isize)>> {
+    let mut ret = vec![];
+    match heading {
+        Heading::E => {
+            ret.push((pos.0 + 1, pos.1));
+            //if pos.1 > 0 {
+            ret.push((pos.0 + 1, pos.1 - 1));
+            //}
+            //if pos.1 < dim.1 - 1 {
+            ret.push((pos.0 + 1, pos.1 + 1));
+            //}
+        }
+        Heading::S => {
+            ret.push((pos.0, pos.1 + 1));
+            //if pos.0 > 0 {
+            ret.push((pos.0 - 1, pos.1 + 1));
+            //}
+            //if pos.0 < dim.0 - 1 {
+            ret.push((pos.0 + 1, pos.1 + 1));
+            //}
+        }
+        Heading::W => {
+            ret.push((pos.0 - 1, pos.1));
+            //if pos.1 > 0 {
+            ret.push((pos.0 - 1, pos.1 - 1));
+            //}
+            //if pos.1 < dim.1 - 1 {
+            ret.push((pos.0 - 1, pos.1 + 1));
+            //}
+        }
+        Heading::N => {
+            ret.push((pos.0, pos.1 - 1));
+            //if pos.0 > 0 {
+            ret.push((pos.0 - 1, pos.1 - 1));
+            //}
+            //if pos.0 < dim.0 - 1 {
+            ret.push((pos.0 + 1, pos.1 - 1));
+            //}
+        }
+    };
+    return Some(ret);
 }
 
 fn calc_decision(
     elf: &Elf,
-    elf_pos: &HashSet<(usize, usize)>,
-    dim: &(usize, usize),
-) -> (Option<(usize, usize)>, bool) {
+    elf_pos: &HashSet<(isize, isize)>,
+    dim: &(isize, isize),
+) -> (Option<(isize, isize)>, bool) {
     let should_move = all_neighbours(&elf.pos, dim)
         .into_iter()
         .map(|t| elf_pos.contains(&t))
@@ -216,12 +222,12 @@ fn calc_decision(
     return (None, should_move);
 }
 
-fn calc_round(elf_set: &HashSet<Elf>, dim: &(usize, usize)) -> HashSet<Elf> {
-    let mut decisions: HashMap<(usize, usize), Elf> = HashMap::new();
-    let mut burned_spots: HashSet<(usize, usize)> = HashSet::new();
+fn calc_round(elf_set: &HashSet<Elf>, dim: &(isize, isize)) -> HashSet<Elf> {
+    let mut decisions: HashMap<(isize, isize), Elf> = HashMap::new();
+    let mut burned_spots: HashSet<(isize, isize)> = HashSet::new();
     let mut new_elf_set: HashSet<Elf> = HashSet::new();
 
-    let elf_pos_set: HashSet<(usize, usize)> = elf_set.iter().map(|e| e.pos.clone()).collect();
+    let elf_pos_set: HashSet<(isize, isize)> = elf_set.iter().map(|e| e.pos.clone()).collect();
     for elf in elf_set.iter() {
         let (decision, consideration_occured) = calc_decision(&elf, &elf_pos_set, dim);
         let mut elf_clone = elf.clone();
@@ -241,7 +247,7 @@ fn calc_round(elf_set: &HashSet<Elf>, dim: &(usize, usize)) -> HashSet<Elf> {
             }
         }
         //if consideration_occured {
-            elf_clone.inc_dec_count();
+        elf_clone.inc_dec_count();
         //}
         new_elf_set.insert(elf_clone);
     }
@@ -254,8 +260,8 @@ fn calc_round(elf_set: &HashSet<Elf>, dim: &(usize, usize)) -> HashSet<Elf> {
     new_elf_set
 }
 
-fn calc_score(elf_pos: &HashSet<Elf>) -> usize {
-    let pos_set: HashSet<(usize, usize)> = elf_pos.iter().map(|e| e.pos).collect();
+fn calc_score(elf_pos: &HashSet<Elf>) -> isize {
+    let pos_set: HashSet<(isize, isize)> = elf_pos.iter().map(|e| e.pos).collect();
     let mut elf_pos_iter = pos_set.iter();
     let mut min_anchor = elf_pos_iter.next().unwrap().clone();
     let mut max_anchor = min_anchor.clone();
@@ -276,8 +282,8 @@ fn calc_score(elf_pos: &HashSet<Elf>) -> usize {
     acc
 }
 
-fn print_map(elf_pos: &HashSet<Elf>, dim: &(usize, usize)) {
-    let pos_set: HashSet<(usize, usize)> = elf_pos.iter().map(|e| e.pos).collect();
+fn print_map(elf_pos: &HashSet<Elf>, dim: &(isize, isize)) {
+    let pos_set: HashSet<(isize, isize)> = elf_pos.iter().map(|e| e.pos).collect();
     for y in 0..dim.1 {
         for x in 0..dim.0 {
             if pos_set.contains(&(x, y)) {
@@ -290,17 +296,17 @@ fn print_map(elf_pos: &HashSet<Elf>, dim: &(usize, usize)) {
     }
 }
 
-fn parse_input(lines: impl Iterator<Item = String>) -> (HashSet<Elf>, (usize, usize)) {
+fn parse_input(lines: impl Iterator<Item = String>) -> (HashSet<Elf>, (isize, isize)) {
     let mut ret: HashSet<Elf> = HashSet::new();
     let mut dim = (0, 0);
 
     for (y, line) in lines.enumerate() {
-        dim.1 = cmp::max(dim.1, y);
+        dim.1 = cmp::max(dim.1, y as isize);
         for (x, chr) in line.chars().enumerate() {
-            dim.0 = cmp::max(dim.0, x);
+            dim.0 = cmp::max(dim.0, x as isize);
             match chr {
                 '#' => {
-                    ret.insert(Elf::new(&(x, y)));
+                    ret.insert(Elf::new(&(x as isize, y as isize)));
                 }
                 _ => {
                     //do nothing
@@ -424,5 +430,22 @@ mod tests {
         assert_eq!(calc_score(&elf_pos), 110);
         let (elf_pos_desired, _) = parse_input(get_mock_result().into_iter());
         assert_eq!(elf_pos_desired, elf_pos);
+    }
+    #[test]
+    fn test_pt2() {
+        let lines = get_mock_input();
+        let (mut elf_pos, dim) = parse_input(lines.into_iter());
+        let mut count = 0;
+        loop {
+            let new_elf_pos = calc_round(&elf_pos, &dim);
+            count += 1;
+            if new_elf_pos == elf_pos {
+                break;
+            } else {
+                elf_pos = new_elf_pos;
+            }
+        }
+
+        assert_eq!(count, 20);
     }
 }
