@@ -60,7 +60,7 @@ pub enum Heading {
 }
 
 impl Heading {
-    pub fn as_num(&self) -> isize {
+    pub fn _as_num(&self) -> isize {
         match self {
             Self::N => 0,
             Self::S => 1,
@@ -122,7 +122,7 @@ impl PartialEq for Elf {
     }
 }
 
-fn all_neighbours(pos: &(isize, isize), dim: &(isize, isize)) -> Vec<(isize, isize)> {
+fn all_neighbours(pos: &(isize, isize), _dim: &(isize, isize)) -> Vec<(isize, isize)> {
     let pos_i = (pos.0 as isize, pos.1 as isize);
     //let dim_i = (dim.0 as isize, dim.1 as isize);
 
@@ -147,7 +147,7 @@ fn all_neighbours(pos: &(isize, isize), dim: &(isize, isize)) -> Vec<(isize, isi
 fn heading_neighbours(
     pos: &(isize, isize),
     heading: &Heading,
-    dim: &(isize, isize),
+    _dim: &(isize, isize),
 ) -> Option<Vec<(isize, isize)>> {
     let mut ret = vec![];
     match heading {
@@ -229,7 +229,7 @@ fn calc_round(elf_set: &HashSet<Elf>, dim: &(isize, isize)) -> HashSet<Elf> {
 
     let elf_pos_set: HashSet<(isize, isize)> = elf_set.iter().map(|e| e.pos.clone()).collect();
     for elf in elf_set.iter() {
-        let (decision, consideration_occured) = calc_decision(&elf, &elf_pos_set, dim);
+        let (decision, _consideration_occured) = calc_decision(&elf, &elf_pos_set, dim);
         let mut elf_clone = elf.clone();
         match decision {
             Some(new_pos) => {
